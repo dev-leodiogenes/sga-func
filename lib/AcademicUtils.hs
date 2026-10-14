@@ -51,3 +51,26 @@ notasAprovadasFilter notas =
 notasReprovadasFilter :: [InformacaoNota] -> [InformacaoNota]
 notasReprovadasFilter notas =
     filter (\nota -> valorNota nota < 7) notas
+
+
+-- FOLD / REDUCE
+
+-- Soma todos os valores das notas usando foldl.
+somaNotas :: [InformacaoNota] -> Double
+somaNotas notas =
+    foldl (\acumulador nota -> acumulador + valorNota nota) 0 notas
+
+-- Calcula a média das notas usando o resultado do fold.
+-- Se a lista estiver vazia, retorna Nothing.
+mediaNotas :: [InformacaoNota] -> Maybe Double
+mediaNotas [] = Nothing
+mediaNotas notas =
+    Just (somaNotas notas / fromIntegral (length notas))
+
+-- CONCATMAP / FLATMAP
+
+-- Recebe várias listas de notas e retorna todos os valores
+-- em uma única lista.
+todosValoresNotas :: [[InformacaoNota]] -> [Double]
+todosValoresNotas listasNotas =
+    concatMap valoresNotasMap listasNotas
