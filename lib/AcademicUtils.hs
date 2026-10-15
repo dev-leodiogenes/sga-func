@@ -1,7 +1,6 @@
 module AcademicUtils where
 
 -- Representa uma nota de forma temporária para desenvolver
--- as funções enquanto os modelos IHP são gerados.
 data InformacaoNota = InformacaoNota
     { nomeAvaliacao :: String
     , valorNota :: Double
