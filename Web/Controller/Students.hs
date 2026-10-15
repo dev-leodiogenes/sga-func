@@ -5,7 +5,7 @@ import Web.View.Students.Index
 import Web.View.Students.New
 import Web.View.Students.Show
 import Web.View.Students.Edit
-import qualified Data.Text as Text
+import Application.Helper.Validacoes (textoObrigatorioValido)
 
 instance Controller StudentsController where
     action StudentsAction = do
@@ -69,8 +69,8 @@ instance Controller StudentsController where
 -- Funcao pura: valida se o campo contem caracteres nao brancos.
 nonBlank :: Text -> ValidatorResult
 nonBlank value
-    | Text.null (Text.strip value) = Failure "Este campo e obrigatorio."
-    | otherwise = Success
+    | textoObrigatorioValido value = Success
+    | otherwise = Failure "Este campo e obrigatorio."
 
 -- Validacoes em memoria; o IHP acrescenta erros ao record.
 -- A unicidade da matricula e validada com consulta no controller.
