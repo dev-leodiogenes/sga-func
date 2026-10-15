@@ -15,7 +15,11 @@ defaultLayout inner = [hsx|
         <body>
             <nav class="navbar navbar-dark bg-dark mb-4">
                 <div class="container">
-                    <a class="navbar-brand" href={StudentsAction}>SGA | Estudantes</a>
+                    <a class="navbar-brand" href={StudentsAction}>SGA</a>
+                    <div class="d-flex gap-3">
+                        <a class="text-white" href={StudentsAction}>Estudantes</a>
+                        <a class="text-white" href={CoursesAction}>Cursos</a>
+                    </div>
                 </div>
             </nav>
             <main class="container pb-5">

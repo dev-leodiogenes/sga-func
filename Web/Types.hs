@@ -15,3 +15,14 @@ data StudentsController
     | UpdateStudentAction { studentId :: !(Id Student) }
     | DeleteStudentAction { studentId :: !(Id Student) }
     deriving (Eq, Show, Data)
+
+-- Sprint 2: CRUD de disciplinas (Course).
+data CoursesController
+    = CoursesAction
+    | NewCourseAction
+    | ShowCourseAction { courseId :: !(Id Course) }
+    | CreateCourseAction
+    | EditCourseAction { courseId :: !(Id Course) }
+    | UpdateCourseAction { courseId :: !(Id Course) }
+    | DeleteCourseAction { courseId :: !(Id Course) }
+    deriving (Eq, Show, Data)
