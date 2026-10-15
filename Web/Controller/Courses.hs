@@ -5,7 +5,7 @@ import Web.View.Courses.Index
 import Web.View.Courses.New
 import Web.View.Courses.Show
 import Web.View.Courses.Edit
-import qualified Data.Text as Text
+import Application.Helper.Validacoes (textoObrigatorioValido, cargaHorariaValida)
 
 instance Controller CoursesController where
     action CoursesAction = do
@@ -68,14 +68,14 @@ instance Controller CoursesController where
 -- Funcao pura usada na validacao do codigo e do nome.
 nonBlank :: Text -> ValidatorResult
 nonBlank value
-    | Text.null (Text.strip value) = Failure "Este campo e obrigatorio."
-    | otherwise = Success
+    | textoObrigatorioValido value = Success
+    | otherwise = Failure "Este campo e obrigatorio."
 
 -- Funcao pura: carga horaria precisa ser maior que zero.
 positiveWorkload :: Int -> ValidatorResult
 positiveWorkload hours
-    | hours <= 0 = Failure "A carga horaria deve ser maior que zero."
-    | otherwise = Success
+    | cargaHorariaValida hours = Success
+    | otherwise = Failure "A carga horaria deve ser maior que zero."
 
 -- As validacoes adicionam erros aos campos do record.
 -- O codigo tambem e verificado como unico no banco (validateIsUnique).
