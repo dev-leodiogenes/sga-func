@@ -31,22 +31,22 @@ CREATE TABLE grades (
 );
 
 ALTER TABLE students ADD CONSTRAINT students_registration_number_unique UNIQUE (registration_number);
-ALTER TABLE students ADD CONSTRAINT students_registration_number_not_blank CHECK (length(trim(registration_number)) > 0);
-ALTER TABLE students ADD CONSTRAINT students_name_not_blank CHECK (length(trim(name)) > 0);
-ALTER TABLE students ADD CONSTRAINT students_email_not_blank CHECK (length(trim(email)) > 0);
+ALTER TABLE students ADD CONSTRAINT students_registration_number_not_blank CHECK (length(replace(registration_number, ' ', '')) > 0);
+ALTER TABLE students ADD CONSTRAINT students_name_not_blank CHECK (length(replace(name, ' ', '')) > 0);
+ALTER TABLE students ADD CONSTRAINT students_email_not_blank CHECK (length(replace(email, ' ', '')) > 0);
 
 ALTER TABLE courses ADD CONSTRAINT courses_code_unique UNIQUE (code);
-ALTER TABLE courses ADD CONSTRAINT courses_code_not_blank CHECK (length(trim(code)) > 0);
-ALTER TABLE courses ADD CONSTRAINT courses_name_not_blank CHECK (length(trim(name)) > 0);
+ALTER TABLE courses ADD CONSTRAINT courses_code_not_blank CHECK (length(replace(code, ' ', '')) > 0);
+ALTER TABLE courses ADD CONSTRAINT courses_name_not_blank CHECK (length(replace(name, ' ', '')) > 0);
 ALTER TABLE courses ADD CONSTRAINT courses_workload_hours_positive CHECK (workload_hours > 0);
 
 ALTER TABLE enrollments ADD CONSTRAINT enrollments_ref_student_id FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE RESTRICT;
 ALTER TABLE enrollments ADD CONSTRAINT enrollments_ref_course_id FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE RESTRICT;
 ALTER TABLE enrollments ADD CONSTRAINT enrollments_student_course_period_unique UNIQUE (student_id, course_id, academic_period);
-ALTER TABLE enrollments ADD CONSTRAINT enrollments_academic_period_not_blank CHECK (length(trim(academic_period)) > 0);
+ALTER TABLE enrollments ADD CONSTRAINT enrollments_academic_period_not_blank CHECK (length(replace(academic_period, ' ', '')) > 0);
 
 ALTER TABLE grades ADD CONSTRAINT grades_ref_enrollment_id FOREIGN KEY (enrollment_id) REFERENCES enrollments (id) ON DELETE RESTRICT;
-ALTER TABLE grades ADD CONSTRAINT grades_assessment_name_not_blank CHECK (length(trim(assessment_name)) > 0);
+ALTER TABLE grades ADD CONSTRAINT grades_assessment_name_not_blank CHECK (length(replace(assessment_name, ' ', '')) > 0);
 ALTER TABLE grades ADD CONSTRAINT grades_value_range CHECK ((value >= 0) AND (value <= 10));
 
 -- The enrollment UNIQUE index already starts with student_id.

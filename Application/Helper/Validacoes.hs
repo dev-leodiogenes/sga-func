@@ -1,4 +1,5 @@
 module Application.Helper.Validacoes where
+import Prelude
 
 import Data.Text (Text)
 import qualified Data.Text as T
