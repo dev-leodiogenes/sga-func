@@ -1,0 +1,24 @@
+name: Verificar compilacao IHP
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Instalar Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Compilar e testar SGA-Func
+        run: nix flake check --impure --accept-flake-config -L
