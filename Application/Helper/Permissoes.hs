@@ -1,4 +1,5 @@
 module Application.Helper.Permissoes where
+import Prelude
 
 -- Perfis de usuario
 data Papel
