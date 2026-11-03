@@ -10,7 +10,7 @@ defaultLayout inner = [hsx|
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <title>SGA - Sistema de Gestao Academica</title>
-            <link rel="stylesheet" href="/app.css" />
+            <link rel="stylesheet" href="/static/prod.css" />
         </head>
         <body>
             <nav class="navbar navbar-dark bg-dark mb-4">
