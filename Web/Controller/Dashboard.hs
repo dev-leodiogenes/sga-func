@@ -8,7 +8,7 @@ import IHP.TypedSql (typedSql, sqlQueryTyped)
 instance Controller DashboardController where
     beforeAction = do
         ensureIsUser
-        accessDeniedUnless (case papelDoBanco currentUser.role of
+        accessDeniedUnless (case papelDoBanco currentUser.role_ of
             Just role -> podeExecutar role ConsultarDashboard
             Nothing -> False)
 
@@ -31,11 +31,11 @@ instance Controller DashboardController where
         |]
         let (totalStudents, totalCourses, totalEnrollments, averageGrade) =
                 case totals of
-                    ((students, courses, enrollments, meanGrade) : _) ->
-                        (fromMaybe 0 students, fromMaybe 0 courses,
-                         fromMaybe 0 enrollments, meanGrade)
+                    (row : _) ->
+                        (fromMaybe 0 row.count, fromMaybe 0 row.count_1,
+                         fromMaybe 0 row.count_2, row.avg)
                     _ -> (0, 0, 0, Nothing)
-        ranking <- sqlQueryTyped [typedSql|
+        rankingRows <- sqlQueryTyped [typedSql|
             SELECT c.name, avg(g.value)::float8, count(g.id)::int4
             FROM courses c
             JOIN enrollments e ON e.course_id = c.id
@@ -45,4 +45,5 @@ instance Controller DashboardController where
             ORDER BY avg(g.value) DESC, c.name ASC
             LIMIT 20
         |]
+        let ranking = map (\row -> (row.name, row.avg, row.count)) rankingRows
         render IndexView { .. }

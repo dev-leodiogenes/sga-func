@@ -11,7 +11,7 @@ import Application.Helper.Permissoes
 instance Controller CoursesController where
     beforeAction = do
         ensureIsUser
-        let papel = papelDoBanco currentUser.role
+        let papel = papelDoBanco currentUser.role_
         case ?theAction of
             CoursesAction -> accessDeniedUnless (papel /= Nothing)
             ShowCourseAction {} -> accessDeniedUnless (papel /= Nothing)

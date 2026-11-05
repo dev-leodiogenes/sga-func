@@ -8,7 +8,7 @@ instance View IndexView where
     html IndexView { .. } = [hsx|
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h1>Estudantes</h1>
-            {when (currentUser.role == "admin") [hsx|<a href={NewStudentAction} class="btn btn-primary">Novo estudante</a>|]}
+            {createStudentButton}
         </div>
         <p class="text-muted">Cadastro e consulta de estudantes do SGA.</p>
         <table class="table table-striped">
@@ -34,7 +34,19 @@ renderStudent student = [hsx|
         <td>{student.email}</td>
         <td>
             <a href={ShowStudentAction student.id} class="btn btn-sm btn-outline-primary">Ver</a>
-            {when (currentUser.role == "admin") [hsx|<a href={EditStudentAction student.id} class="btn btn-sm btn-outline-secondary">Editar</a>|]}
+            {editStudentButton student}
         </td>
     </tr>
 |]
+
+createStudentButton :: Html
+createStudentButton =
+    if currentUser.role_ == "admin"
+        then [hsx|<a href={NewStudentAction} class="btn btn-primary">Novo estudante</a>|]
+        else mempty
+
+editStudentButton :: Student -> Html
+editStudentButton student =
+    if currentUser.role_ == "admin"
+        then [hsx|<a href={EditStudentAction student.id} class="btn btn-sm btn-outline-secondary">Editar</a>|]
+        else mempty

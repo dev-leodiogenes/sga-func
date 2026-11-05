@@ -15,10 +15,10 @@ instance View ShowView where
         </dl>
         <div class="d-flex gap-2 mt-4">
             <a href={StudentsAction} class="btn btn-outline-secondary">Voltar</a>
-            {when (currentUser.role == "admin") (adminActions student)}
+            {when (currentUser.role_ == "admin") (adminActions student)}
 
         </div>
-        {when (currentUser.role == "admin") (privateNoteForm student privateNote)}
+        {when (currentUser.role_ == "admin") (privateNoteForm student privateNote)}
     |]
 
 adminActions :: Student -> Html

@@ -17,9 +17,9 @@ defaultLayout inner = [hsx|
                 <div class="container">
                     <a class="navbar-brand" href={CoursesAction}>SGA</a>
                     <div class="d-flex gap-3">
-                        {when (mayListStudents) [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|]}
-                        {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|]}
-                        {when maySeeDashboard [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|]}
+                        {studentsNavigation}
+                        {coursesNavigation}
+                        {dashboardNavigation}
                         {authNavigation}
                     </div>
                 </div>
@@ -44,8 +44,20 @@ authNavigation =
 
 mayListStudents :: (?context :: ControllerContext) => Bool
 mayListStudents = case currentUserOrNothing of
-    Just user -> user.role == "admin" || user.role == "professor"
+    Just user -> user.role_ == "admin" || user.role_ == "professor"
     Nothing -> False
 
 maySeeDashboard :: (?context :: ControllerContext) => Bool
 maySeeDashboard = mayListStudents
+
+studentsNavigation :: (?context :: ControllerContext) => Html
+studentsNavigation =
+    if mayListStudents then [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|] else mempty
+
+coursesNavigation :: (?context :: ControllerContext) => Html
+coursesNavigation =
+    if isJust currentUserOrNothing then [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|] else mempty
+
+dashboardNavigation :: (?context :: ControllerContext) => Html
+dashboardNavigation =
+    if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|] else mempty

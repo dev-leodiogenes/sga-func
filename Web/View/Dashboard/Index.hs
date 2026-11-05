@@ -8,7 +8,7 @@ data IndexView = IndexView
     , totalCourses :: Int
     , totalEnrollments :: Int
     , averageGrade :: Maybe Double
-    , ranking :: [(Text, Maybe Double, Maybe Int)]
+    , ranking :: [(Text, Maybe Double, Int)]
     }
 
 instance View IndexView where
@@ -58,11 +58,11 @@ renderPeriodOption selected value = [hsx|
     <option value={value} selected={selected == value}>{value}</option>
 |]
 
-renderRank :: (Text, Maybe Double, Maybe Int) -> Html
+renderRank :: (Text, Maybe Double, Int) -> Html
 renderRank (name, mean, quantity) = [hsx|
     <tr>
         <td>{name}</td>
         <td>{maybe "-" show mean}</td>
-        <td>{fromMaybe 0 quantity}</td>
+        <td>{quantity}</td>
     </tr>
 |]

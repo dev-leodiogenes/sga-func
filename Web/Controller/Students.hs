@@ -12,7 +12,7 @@ import Application.Helper.Criptografia (savePrivateNote, readPrivateNote)
 instance Controller StudentsController where
     beforeAction = do
         ensureIsUser
-        let papel = papelDoBanco currentUser.role
+        let papel = papelDoBanco currentUser.role_
         case ?theAction of
             StudentsAction -> accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
             ShowStudentAction { studentId } ->
@@ -33,7 +33,7 @@ instance Controller StudentsController where
 
     action ShowStudentAction { studentId } = do
         student <- fetch studentId
-        privateNote <- if currentUser.role == "admin" then readPrivateNote studentId else pure Nothing
+        privateNote <- if currentUser.role_ == "admin" then readPrivateNote studentId else pure Nothing
         render ShowView { .. }
 
     action EditStudentAction { studentId } = do
