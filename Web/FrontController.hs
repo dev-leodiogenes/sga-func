@@ -13,7 +13,7 @@ import Web.View.Layout (defaultLayout)
 
 instance FrontController WebApplication where
     controllers =
-        [ startPage StudentsAction
+        [ startPage CoursesAction
         , parseRoute @StudentsController
         , parseRoute @CoursesController
         , parseRoute @SessionsController

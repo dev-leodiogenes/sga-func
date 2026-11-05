@@ -15,7 +15,7 @@ defaultLayout inner = [hsx|
         <body>
             <nav class="navbar navbar-dark bg-dark mb-4">
                 <div class="container">
-                    <a class="navbar-brand" href={StudentsAction}>SGA</a>
+                    <a class="navbar-brand" href={CoursesAction}>SGA</a>
                     <div class="d-flex gap-3">
                         {when (mayListStudents) [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|]}
                         {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|]}
