@@ -1,6 +1,9 @@
 module Web.View.Enrollments.Show where
 
 import Web.View.Prelude
+import qualified Data.Text as T
+import Numeric (showFFloat)
+import Application.Helper.Boletim (mediaDasNotas)
 
 data ShowView = ShowView
     { enrollment :: Enrollment
@@ -8,6 +11,7 @@ data ShowView = ShowView
     , course :: Course
     , grades :: [Grade]
     , newGrade :: Grade
+    , assessments :: [Assessment]
     }
 
 instance View ShowView where
@@ -43,7 +47,9 @@ instance View ShowView where
         {renderAverage grades}
 
         <h3 class="mt-4">Lancamento de nota</h3>
-        {renderGradeForm enrollment newGrade}
+        {renderGradeForm enrollment newGrade assessments}
+
+        {when (currentUser.role_ == "admin") (deleteEnrollmentButton enrollment)}
 
         <a href={EnrollmentsAction}
            class="btn btn-outline-secondary mt-4">
@@ -74,21 +80,64 @@ renderAverage [] = [hsx|
 renderAverage grades = [hsx|
     <p class="fw-bold">
         Media das avaliacoes:
-        {tshow (sum (map (\grade -> realToFrac (grade.value) :: Double) grades)
-            / fromIntegral (length grades))}
+        {maybe "Sem notas" formatarMediaMatricula (mediaDasNotas grades)}
     </p>
 |]
 
-renderGradeForm :: Enrollment -> Grade -> Html
-renderGradeForm enrollment grade =
-    formFor' grade (pathTo (CreateGradeAction enrollment.id)) [hsx|
-        <div class="mb-3">
-            {(textField #assessmentName) { fieldLabel = "Avaliacao" }}
-        </div>
+formatarMediaMatricula :: Double -> Text
+formatarMediaMatricula numero =
+    T.replace "." "," (T.pack (showFFloat (Just 2) numero ""))
 
-        <div class="mb-3">
-            {(numberField #value) { fieldLabel = "Nota (0 a 10)", additionalAttributes = [("step", "0.01"), ("min", "0"), ("max", "10")] }}
-        </div>
+renderGradeForm :: Enrollment -> Grade -> [Assessment] -> Html
+renderGradeForm enrollment grade assessments =
+    if null assessments
+        then [hsx|
+            <div class="alert alert-info">
+                Nenhuma avaliacao cadastrada para esta disciplina
+                e periodo.
+                <a href={AssessmentsAction}>
+                    Consultar avaliacoes
+                </a>
+            </div>
+        |]
+        else formFor' grade
+            (pathTo (CreateGradeAction enrollment.id)) [hsx|
+            <div class="mb-3">
+                <label class="form-label">
+                    Selecione a avaliacao
+                </label>
+                <select name="assessmentId"
+                        class="form-select" required>
+                    <option value="">Selecione...</option>
+                    {forEach assessments renderAssessmentOption}
+                </select>
+            </div>
 
-        {submitButton { label = "Salvar nota" }}
-    |]
+            <div class="mb-3">
+                {(numberField #value)
+                    { fieldLabel = "Nota (0 a 10)"
+                    , additionalAttributes =
+                        [("step", "0.01"), ("min", "0"), ("max", "10")]
+                    }}
+            </div>
+
+            {submitButton { label = "Salvar nota" }}
+        |]
+
+renderAssessmentOption :: Assessment -> Html
+renderAssessmentOption assessment = [hsx|
+    <option value={tshow assessment.id}>
+        {assessment.name}
+    </option>
+|]
+
+deleteEnrollmentButton :: Enrollment -> Html
+deleteEnrollmentButton enrollment = [hsx|
+    <form method="POST"
+          action={CreateEnrollmentDeletionAction enrollment.id}
+          onsubmit="return confirm('Excluir esta matricula?');">
+        <button type="submit" class="btn btn-outline-danger">
+            Excluir matricula
+        </button>
+    </form>
+|]

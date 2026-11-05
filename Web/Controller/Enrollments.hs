@@ -10,8 +10,11 @@ import Application.Helper.Validacoes (textoObrigatorioValido)
 instance Controller EnrollmentsController where
     beforeAction = do
         ensureIsUser
+        requirePasswordChange
         let papel = papelDoBanco currentUser.role_
         case ?theAction of
+            StudentEnrollmentsAction {} ->
+                accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
             EnrollmentsAction ->
                 accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
             ShowEnrollmentAction {} ->
@@ -20,7 +23,19 @@ instance Controller EnrollmentsController where
                 accessDeniedUnless (papel == Just Administrador)
 
     action EnrollmentsAction = do
+        let selectedStudent = Nothing
         enrollments <- query @Enrollment |> orderByDesc #academicPeriod |> fetch
+        students <- query @Student |> fetch
+        courses <- query @Course |> fetch
+        render IndexView { .. }
+
+    action StudentEnrollmentsAction { studentId } = do
+        student <- fetch studentId
+        let selectedStudent = Just student
+        enrollments <- query @Enrollment
+            |> filterWhere (#studentId, studentId)
+            |> orderByDesc #academicPeriod
+            |> fetch
         students <- query @Student |> fetch
         courses <- query @Course |> fetch
         render IndexView { .. }
@@ -64,6 +79,12 @@ instance Controller EnrollmentsController where
         student <- fetch enrollment.studentId
         course <- fetch enrollment.courseId
 
+        assessments <- query @Assessment
+            |> filterWhere (#courseId, enrollment.courseId)
+            |> filterWhere (#academicPeriod, enrollment.academicPeriod)
+            |> orderByAsc #name
+            |> fetch
+
         grades <- query @Grade
             |> filterWhere (#enrollmentId, enrollmentId)
             |> orderByAsc #assessmentName
@@ -73,6 +94,22 @@ instance Controller EnrollmentsController where
                 |> set #enrollmentId enrollment.id
 
         render ShowView { .. }
+
+    action CreateEnrollmentDeletionAction { enrollmentId } = do
+        enrollment <- fetch enrollmentId
+        hasGrades <- query @Grade
+            |> filterWhere (#enrollmentId, enrollmentId)
+            |> fetchExists
+
+        if hasGrades
+            then do
+                setErrorMessage "Nao e possivel excluir uma matricula com notas."
+                redirectTo ShowEnrollmentAction { enrollmentId }
+            else do
+                let studentId = enrollment.studentId
+                deleteRecord enrollment
+                setSuccessMessage "Matricula excluida com sucesso."
+                redirectTo StudentEnrollmentsAction { studentId }
 
 nonBlank :: Text -> ValidatorResult
 nonBlank value

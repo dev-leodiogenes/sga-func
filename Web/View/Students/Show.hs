@@ -15,6 +15,7 @@ instance View ShowView where
         </dl>
         <div class="d-flex gap-2 mt-4">
             <a href={StudentsAction} class="btn btn-outline-secondary">Voltar</a>
+            {studentEnrollmentsButton student}
             {when (currentUser.role_ == "admin") (adminActions student)}
 
         </div>
@@ -43,3 +44,15 @@ privateNoteForm student privateNote = [hsx|
         </div>
     </section>
 |]
+
+
+studentEnrollmentsButton :: Student -> Html
+studentEnrollmentsButton student =
+    if currentUser.role_ == "admin" || currentUser.role_ == "professor"
+        then [hsx|
+            <a href={StudentEnrollmentsAction student.id}
+               class="btn btn-outline-primary">
+                Matriculas
+            </a>
+        |]
+        else mempty

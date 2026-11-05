@@ -17,10 +17,10 @@ defaultLayout inner = [hsx|
                 <div class="container">
                     <a class="navbar-brand" href={CoursesAction}>SGA</a>
                     <div class="d-flex gap-3">
-                        {studentsNavigation}
-                        {coursesNavigation}
-                        {enrollmentsNavigation}
                         {dashboardNavigation}
+                        {studentsNavigation}
+                        {reportCardNavigation}
+                        {coursesNavigation}
                         {authNavigation}
                     </div>
                 </div>
@@ -57,11 +57,11 @@ studentsNavigation =
 
 coursesNavigation :: (?context :: Request, ?request :: Request) => Html
 coursesNavigation =
-    if isJust currentUserOrNothing then [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|] else mempty
+    if isJust currentUserOrNothing then [hsx|<a class="text-white" href={CoursesAction}>Disciplinas</a>|] else mempty
 
 dashboardNavigation :: (?context :: Request, ?request :: Request) => Html
 dashboardNavigation =
-    if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|] else mempty
+    if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Painel</a>|] else mempty
 
 
 enrollmentsNavigation :: (?context :: Request, ?request :: Request) => Html
@@ -69,3 +69,27 @@ enrollmentsNavigation =
     if mayListStudents
         then [hsx|<a class="text-white" href={EnrollmentsAction}>Matriculas</a>|]
         else mempty
+
+
+-- Administradores e professores podem consultar avaliacoes.
+assessmentsNavigation :: (?context :: Request, ?request :: Request) => Html
+assessmentsNavigation =
+    if mayListStudents
+        then [hsx|
+            <a class="text-white" href={AssessmentsAction}>
+                Avaliacoes
+            </a>
+        |]
+        else mempty
+
+
+reportCardNavigation :: (?context :: Request, ?request :: Request) => Html
+reportCardNavigation =
+    case currentUserOrNothing of
+        Just user | user.role_ == "aluno" ->
+            [hsx|
+                <a class="text-white" href={MyReportCardAction}>
+                    Meu boletim
+                </a>
+            |]
+        _ -> mempty

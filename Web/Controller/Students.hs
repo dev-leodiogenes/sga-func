@@ -1,9 +1,14 @@
 module Web.Controller.Students where
 
 import Web.Controller.Prelude
+import qualified Data.List as List
+import IHP.AuthSupport.Authentication (hashPassword)
+import IHP.TypedSql (typedSql, sqlQueryTyped)
+import qualified Data.Text as T
 import Web.View.Students.Index
 import Web.View.Students.New
 import Web.View.Students.Show
+import Web.View.Students.ReportCard
 import Web.View.Students.Edit
 import Application.Helper.Validacoes (textoObrigatorioValido)
 import Data.Coerce (coerce)
@@ -13,8 +18,12 @@ import Application.Helper.Criptografia (savePrivateNote, readPrivateNote)
 instance Controller StudentsController where
     beforeAction = do
         ensureIsUser
+        requirePasswordChange
         let papel = papelDoBanco currentUser.role_
         case ?theAction of
+            MyReportCardAction ->
+                accessDeniedUnless
+                    (papel == Just Aluno && isJust currentUser.studentId)
             StudentsAction -> accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
             ShowStudentAction { studentId } ->
                 accessDeniedUnless (case papel of
@@ -27,6 +36,33 @@ instance Controller StudentsController where
             |> orderByAsc #name
             |> fetch
         render IndexView { .. }
+
+    action MyReportCardAction = do
+        case currentUser.studentId of
+            Nothing -> redirectTo CoursesAction
+            Just uuid -> do
+                let studentId = coerce uuid :: Id Student
+
+                enrollments <- query @Enrollment
+                    |> filterWhere (#studentId, studentId)
+                    |> orderByDesc #academicPeriod
+                    |> fetch
+
+                courses <- mapM
+                    (\enrollment -> fetch enrollment.courseId)
+                    enrollments
+
+                gradeGroups <- mapM
+                    (\enrollment ->
+                        query @Grade
+                            |> filterWhere (#enrollmentId, enrollment.id)
+                            |> fetch)
+                    enrollments
+
+                let grades = concatMap
+                        (List.sortOn (\grade -> grade.assessmentName))
+                        gradeGroups
+                render ReportCardView { .. }
 
     action NewStudentAction = do
         let student = newRecord @Student
@@ -42,16 +78,50 @@ instance Controller StudentsController where
         render EditView { .. }
 
     action CreateStudentAction = do
+        let initialPassword = param @Text "initialPassword"
         let student = newRecord @Student
+
         student
             |> buildStudent
             |> validateIsUnique #registrationNumber
             >>= ifValid \case
                 Left student -> render NewView { .. }
+
                 Right student -> do
-                    student <- createRecord student
-                    setSuccessMessage "Estudante cadastrado com sucesso."
-                    redirectTo ShowStudentAction { studentId = student.id }
+                    let email = student.email
+
+                    existingUsers <- sqlQueryTyped [typedSql|
+                        SELECT id FROM users
+                        WHERE lower(email) = lower(${email})
+                        LIMIT 1
+                    |]
+
+                    if T.length (T.strip initialPassword) < 8
+                        then do
+                            setErrorMessage "A senha deve ter pelo menos 8 caracteres."
+                            render NewView { .. }
+                        else if not (null existingUsers)
+                            then do
+                                setErrorMessage "Ja existe uma conta com este e-mail."
+                                render NewView { .. }
+                            else do
+                                passwordHash <- hashPassword initialPassword
+
+                                student <- withTransaction do
+                                    student <- createRecord student
+
+                                    let user = newRecord @User
+                                            |> set #email student.email
+                                            |> set #passwordHash passwordHash
+                                            |> set #role_ "aluno"
+                                            |> set #studentId (Just (coerce student.id))
+                                            |> set #mustChangePassword True
+
+                                    _ <- createRecord user
+                                    pure student
+
+                                setSuccessMessage "Estudante e conta criados com sucesso."
+                                redirectTo ShowStudentAction { studentId = student.id }
 
     action UpdateStudentAction { studentId } = do
         student <- fetch studentId

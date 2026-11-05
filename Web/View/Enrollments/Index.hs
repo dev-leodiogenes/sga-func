@@ -6,13 +6,17 @@ data IndexView = IndexView
     { enrollments :: [Enrollment]
     , students :: [Student]
     , courses :: [Course]
+    , selectedStudent :: Maybe Student
     }
 
 instance View IndexView where
     html IndexView { .. } = [hsx|
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1>Matriculas</h1>
-            {createEnrollmentButton}
+            <h1>{maybe "Matriculas" (\student -> "Matriculas de " <> student.name) selectedStudent}</h1>
+            <div class="d-flex gap-2 align-items-center">
+                {createEnrollmentButton}
+                {allEnrollmentsButton selectedStudent}
+            </div>
         </div>
 
         <p class="text-muted">
@@ -66,6 +70,18 @@ createEnrollmentButton =
         then [hsx|
             <a href={NewEnrollmentAction} class="btn btn-primary">
                 Nova matricula
+            </a>
+        |]
+        else mempty
+
+
+allEnrollmentsButton :: Maybe Student -> Html
+allEnrollmentsButton selectedStudent =
+    if isJust selectedStudent
+        then [hsx|
+            <a href={EnrollmentsAction}
+               class="btn btn-outline-secondary">
+                Todas as matriculas
             </a>
         |]
         else mempty
