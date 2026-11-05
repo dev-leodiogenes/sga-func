@@ -15,3 +15,6 @@ instance AutoRoute EnrollmentsController
 
 -- Rotas de lancamento e exclusao de notas
 instance AutoRoute GradesController
+
+-- Rotas de avaliacoes compartilhadas
+instance AutoRoute AssessmentsController

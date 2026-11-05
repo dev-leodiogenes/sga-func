@@ -8,6 +8,7 @@ import IHP.TypedSql (typedSql, sqlQueryTyped)
 instance Controller DashboardController where
     beforeAction = do
         ensureIsUser
+        requirePasswordChange
         accessDeniedUnless (case papelDoBanco currentUser.role_ of
             Just role -> podeExecutar role ConsultarDashboard
             Nothing -> False)

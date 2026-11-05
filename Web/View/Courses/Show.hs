@@ -15,6 +15,7 @@ instance View ShowView where
         </dl>
         <div class="d-flex gap-2 mt-4">
             <a href={CoursesAction} class="btn btn-outline-secondary">Voltar</a>
+            {assessmentsButton}
             {when (currentUser.role_ == "admin") (adminCourseActions course)}
 
         </div>
@@ -29,3 +30,14 @@ adminCourseActions course = [hsx|
         <button type="submit" class="btn btn-outline-danger">Excluir disciplina</button>
     </form>
 |]
+
+
+assessmentsButton :: Html
+assessmentsButton =
+    if currentUser.role_ == "admin" || currentUser.role_ == "professor"
+        then [hsx|
+            <a href={AssessmentsAction} class="btn btn-outline-primary">
+                Avaliacoes
+            </a>
+        |]
+        else mempty

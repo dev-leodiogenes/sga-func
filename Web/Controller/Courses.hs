@@ -1,6 +1,7 @@
 module Web.Controller.Courses where
 
 import Web.Controller.Prelude
+import Data.Coerce (coerce)
 import Web.View.Courses.Index
 import Web.View.Courses.New
 import Web.View.Courses.Show
@@ -11,6 +12,7 @@ import Application.Helper.Permissoes
 instance Controller CoursesController where
     beforeAction = do
         ensureIsUser
+        requirePasswordChange
         let papel = papelDoBanco currentUser.role_
         case ?theAction of
             CoursesAction -> accessDeniedUnless (papel /= Nothing)
@@ -18,9 +20,24 @@ instance Controller CoursesController where
             _ -> accessDeniedUnless (papel == Just Administrador)
 
     action CoursesAction = do
-        courses <- query @Course
+        allCourses <- query @Course
             |> orderByAsc #name
             |> fetch
+
+        courses <- if currentUser.role_ == "aluno"
+            then case currentUser.studentId of
+                Nothing -> pure []
+                Just studentUuid -> do
+                    enrollments <- query @Enrollment
+                        |> filterWhere (#studentId, coerce studentUuid :: Id Student)
+                        |> fetch
+                    pure (filter
+                        (\course -> any
+                            (\enrollment -> enrollment.courseId == course.id)
+                            enrollments)
+                        allCourses)
+            else pure allCourses
+
         render IndexView { .. }
 
     action NewCourseAction = do
@@ -28,6 +45,16 @@ instance Controller CoursesController where
         render NewView { .. }
 
     action ShowCourseAction { courseId } = do
+        when (currentUser.role_ == "aluno") do
+            case currentUser.studentId of
+                Nothing -> accessDeniedUnless False
+                Just studentUuid -> do
+                    enrolled <- query @Enrollment
+                        |> filterWhere (#studentId, coerce studentUuid :: Id Student)
+                        |> filterWhere (#courseId, courseId)
+                        |> fetchExists
+                    accessDeniedUnless enrolled
+
         course <- fetch courseId
         render ShowView { .. }
 

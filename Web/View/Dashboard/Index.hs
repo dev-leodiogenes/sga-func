@@ -1,6 +1,8 @@
 module Web.View.Dashboard.Index where
 import Web.View.Prelude
 import Numeric (showFFloat)
+import Data.List (sortOn)
+import Text.Read (readMaybe)
 import qualified Data.Text as T
 
 data IndexView = IndexView
@@ -131,7 +133,7 @@ renderCourseOption selected course = [hsx|
 
 assessmentNames :: [Grade] -> [Text]
 assessmentNames grades =
-    foldl addName [] grades
+    sortOn ordemAvaliacao (foldl addName [] grades)
     where
         addName names grade =
             if grade.assessmentName `elem` names
@@ -192,3 +194,11 @@ courseName courseId courses =
     case find (\course -> course.id == courseId) courses of
         Just course -> course.name
         Nothing -> "Disciplina nao encontrada"
+
+
+-- Ordena AV1, AV2, AV3 ... AV10, independentemente do cadastro.
+ordemAvaliacao :: Text -> (Int, Int, Text)
+ordemAvaliacao nome =
+    case T.stripPrefix "AV" (T.toUpper nome) >>= readMaybe . T.unpack of
+        Just numero -> (0, numero, nome)
+        Nothing -> (1, 0, nome)
