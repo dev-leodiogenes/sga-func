@@ -2,7 +2,7 @@ module Web.View.Layout where
 
 import Web.View.Prelude
 
-defaultLayout :: Html -> Html
+defaultLayout :: (?context :: Request, ?request :: Request) => Html -> Html
 defaultLayout inner = [hsx|
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -15,10 +15,13 @@ defaultLayout inner = [hsx|
         <body>
             <nav class="navbar navbar-dark bg-dark mb-4">
                 <div class="container">
-                    <a class="navbar-brand" href={StudentsAction}>SGA</a>
+                    <a class="navbar-brand" href={CoursesAction}>SGA</a>
                     <div class="d-flex gap-3">
-                        <a class="text-white" href={StudentsAction}>Estudantes</a>
-                        <a class="text-white" href={CoursesAction}>Cursos</a>
+                        {studentsNavigation}
+                        {coursesNavigation}
+                        {enrollmentsNavigation}
+                        {dashboardNavigation}
+                        {authNavigation}
                     </div>
                 </div>
             </nav>
@@ -29,3 +32,40 @@ defaultLayout inner = [hsx|
         </body>
     </html>
 |]
+
+authNavigation :: (?context :: Request, ?request :: Request) => Html
+authNavigation =
+    case currentUserOrNothing of
+        Nothing -> [hsx|<a class="text-white" href={NewSessionAction}>Entrar</a>|]
+        Just _ -> [hsx|
+            <form method="POST" action={CreateLogoutAction}>
+                <button class="btn btn-sm btn-outline-light" type="submit">Sair</button>
+            </form>
+        |]
+
+mayListStudents :: (?context :: Request, ?request :: Request) => Bool
+mayListStudents = case currentUserOrNothing of
+    Just user -> user.role_ == "admin" || user.role_ == "professor"
+    Nothing -> False
+
+maySeeDashboard :: (?context :: Request, ?request :: Request) => Bool
+maySeeDashboard = mayListStudents
+
+studentsNavigation :: (?context :: Request, ?request :: Request) => Html
+studentsNavigation =
+    if mayListStudents then [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|] else mempty
+
+coursesNavigation :: (?context :: Request, ?request :: Request) => Html
+coursesNavigation =
+    if isJust currentUserOrNothing then [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|] else mempty
+
+dashboardNavigation :: (?context :: Request, ?request :: Request) => Html
+dashboardNavigation =
+    if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|] else mempty
+
+
+enrollmentsNavigation :: (?context :: Request, ?request :: Request) => Html
+enrollmentsNavigation =
+    if mayListStudents
+        then [hsx|<a class="text-white" href={EnrollmentsAction}>Matriculas</a>|]
+        else mempty

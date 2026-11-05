@@ -1,11 +1,14 @@
 -- Sprint 1: academic data model. See docs/SPRINT-1-MODELAGEM.md.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TYPE enrollment_statuses AS ENUM ('Active', 'Cancelled', 'Completed');
 
 CREATE TABLE students (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
     registration_number TEXT NOT NULL,
     name TEXT NOT NULL,
-    email TEXT NOT NULL
+    email TEXT NOT NULL,
+    confidential_note BYTEA DEFAULT NULL
 );
 
 CREATE TABLE courses (
@@ -52,3 +55,19 @@ ALTER TABLE grades ADD CONSTRAINT grades_value_range CHECK ((value >= 0) AND (va
 -- The enrollment UNIQUE index already starts with student_id.
 CREATE INDEX enrollments_course_id_index ON enrollments (course_id);
 CREATE INDEX grades_enrollment_id_index ON grades (enrollment_id);
+
+-- Users are provisioned by administrators, never through an open signup endpoint.
+-- Password hashes are created with IHP's salted hashPassword function.
+CREATE TABLE users (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
+    email TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    locked_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    failed_login_attempts INT DEFAULT 0 NOT NULL,
+    role TEXT DEFAULT 'aluno' NOT NULL,
+    student_id UUID DEFAULT NULL,
+    CONSTRAINT users_email_not_blank CHECK (length(replace(email, ' ', '')) > 0),
+    CONSTRAINT users_role_valid CHECK (role IN ('admin', 'professor', 'aluno')),
+    CONSTRAINT users_ref_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL
+);
+CREATE UNIQUE INDEX users_email_case_insensitive_unique ON users (lower(email));

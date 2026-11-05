@@ -6,8 +6,22 @@ import Web.View.Students.New
 import Web.View.Students.Show
 import Web.View.Students.Edit
 import Application.Helper.Validacoes (textoObrigatorioValido)
+import Data.Coerce (coerce)
+import Application.Helper.Permissoes
+import Application.Helper.Criptografia (savePrivateNote, readPrivateNote)
 
 instance Controller StudentsController where
+    beforeAction = do
+        ensureIsUser
+        let papel = papelDoBanco currentUser.role_
+        case ?theAction of
+            StudentsAction -> accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
+            ShowStudentAction { studentId } ->
+                accessDeniedUnless (case papel of
+                    Just role -> podeAcessarCadastro role (currentUser.studentId == Just (coerce studentId))
+                    Nothing -> False)
+            _ -> accessDeniedUnless (papel == Just Administrador)
+
     action StudentsAction = do
         students <- query @Student
             |> orderByAsc #name
@@ -20,6 +34,7 @@ instance Controller StudentsController where
 
     action ShowStudentAction { studentId } = do
         student <- fetch studentId
+        privateNote <- if currentUser.role_ == "admin" then readPrivateNote studentId else pure Nothing
         render ShowView { .. }
 
     action EditStudentAction { studentId } = do
@@ -49,6 +64,12 @@ instance Controller StudentsController where
                     student <- updateRecord student
                     setSuccessMessage "Estudante atualizado com sucesso."
                     redirectTo ShowStudentAction { studentId = student.id }
+
+    action CreateStudentNoteAction { studentId } = do
+        let note = param @Text "note"
+        savePrivateNote studentId note
+        setSuccessMessage "Anotacao privada atualizada."
+        redirectTo ShowStudentAction { studentId }
 
     action DeleteStudentAction { studentId } = do
         -- O esquema ja proibe apagar estudantes com matriculas vinculadas.

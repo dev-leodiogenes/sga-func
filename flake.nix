@@ -33,6 +33,7 @@
                         wai
                         text
                         mtl
+                        ihp-typed-sql
                         # ihp-mail           # Email support: https://ihp.digitallyinduced.com/Guide/mail.html
                         # ihp-datasync       # Real-time DataSync
                         # ihp-job-dashboard  # Job dashboard UI

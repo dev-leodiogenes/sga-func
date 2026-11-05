@@ -15,11 +15,17 @@ instance View ShowView where
         </dl>
         <div class="d-flex gap-2 mt-4">
             <a href={CoursesAction} class="btn btn-outline-secondary">Voltar</a>
-            <a href={EditCourseAction course.id} class="btn btn-primary">Editar</a>
-            <form method="POST" action={DeleteCourseAction course.id}>
-                <input type="hidden" name="_method" value="DELETE" />
-                <button type="submit" class="btn btn-outline-danger">Excluir disciplina</button>
-            </form>
+            {when (currentUser.role_ == "admin") (adminCourseActions course)}
+
         </div>
-        <p class="text-muted mt-2">A exclusao e bloqueada quando existem matriculas vinculadas.</p>
+
     |]
+
+adminCourseActions :: Course -> Html
+adminCourseActions course = [hsx|
+    <a href={EditCourseAction course.id} class="btn btn-primary">Editar</a>
+    <form method="POST" action={DeleteCourseAction course.id}>
+        <input type="hidden" name="_method" value="DELETE" />
+        <button type="submit" class="btn btn-outline-danger">Excluir disciplina</button>
+    </form>
+|]
