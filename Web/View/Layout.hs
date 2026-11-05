@@ -17,8 +17,9 @@ defaultLayout inner = [hsx|
                 <div class="container">
                     <a class="navbar-brand" href={StudentsAction}>SGA</a>
                     <div class="d-flex gap-3">
-                        <a class="text-white" href={StudentsAction}>Estudantes</a>
-                        <a class="text-white" href={CoursesAction}>Cursos</a>
+                        {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|]}
+                        {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|]}
+                        {authNavigation}
                     </div>
                 </div>
             </nav>
@@ -29,3 +30,13 @@ defaultLayout inner = [hsx|
         </body>
     </html>
 |]
+
+authNavigation :: Html
+authNavigation =
+    case currentUserOrNothing of
+        Nothing -> [hsx|<a class="text-white" href={NewSessionAction}>Entrar</a>|]
+        Just _ -> [hsx|
+            <form method="POST" action={DeleteSessionAction}>
+                <button class="btn btn-sm btn-outline-light" type="submit">Sair</button>
+            </form>
+        |]

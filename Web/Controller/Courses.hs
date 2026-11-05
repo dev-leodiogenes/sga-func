@@ -6,8 +6,17 @@ import Web.View.Courses.New
 import Web.View.Courses.Show
 import Web.View.Courses.Edit
 import Application.Helper.Validacoes (textoObrigatorioValido, cargaHorariaValida)
+import Application.Helper.Permissoes
 
 instance Controller CoursesController where
+    beforeAction = do
+        ensureIsUser
+        let papel = papelDoBanco currentUser.role
+        case ?theAction of
+            CoursesAction -> accessDeniedUnless (papel /= Nothing)
+            ShowCourseAction {} -> accessDeniedUnless (papel /= Nothing)
+            _ -> accessDeniedUnless (papel == Just Administrador)
+
     action CoursesAction = do
         courses <- query @Course
             |> orderByAsc #name

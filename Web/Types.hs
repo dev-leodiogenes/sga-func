@@ -15,6 +15,7 @@ data StudentsController
     | EditStudentAction { studentId :: !(Id Student) }
     | UpdateStudentAction { studentId :: !(Id Student) }
     | DeleteStudentAction { studentId :: !(Id Student) }
+    | SaveStudentNoteAction { studentId :: !(Id Student) }
     deriving (Eq, Show, Data)
 
 -- Sprint 2: CRUD de disciplinas (Course).

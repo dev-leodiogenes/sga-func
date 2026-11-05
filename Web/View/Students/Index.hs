@@ -8,7 +8,7 @@ instance View IndexView where
     html IndexView { .. } = [hsx|
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h1>Estudantes</h1>
-            <a href={NewStudentAction} class="btn btn-primary">Novo estudante</a>
+            {when (currentUser.role == "admin") [hsx|<a href={NewStudentAction} class="btn btn-primary">Novo estudante</a>|]}
         </div>
         <p class="text-muted">Cadastro e consulta de estudantes do SGA.</p>
         <table class="table table-striped">
@@ -34,7 +34,7 @@ renderStudent student = [hsx|
         <td>{student.email}</td>
         <td>
             <a href={ShowStudentAction student.id} class="btn btn-sm btn-outline-primary">Ver</a>
-            <a href={EditStudentAction student.id} class="btn btn-sm btn-outline-secondary">Editar</a>
+            {when (currentUser.role == "admin") [hsx|<a href={EditStudentAction student.id} class="btn btn-sm btn-outline-secondary">Editar</a>|]}
         </td>
     </tr>
 |]
