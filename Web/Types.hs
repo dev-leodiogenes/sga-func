@@ -33,6 +33,7 @@ data SessionsController
     = NewSessionAction
     | CreateSessionAction
     | DeleteSessionAction
+    | CreateLogoutAction
     deriving (Eq, Show, Data)
 
 instance HasNewSessionUrl User where
@@ -42,4 +43,18 @@ type instance CurrentUserRecord = User
 
 data DashboardController
     = DashboardAction
+    deriving (Eq, Show, Data)
+
+-- Matriculas: vinculo entre estudante e disciplina
+data EnrollmentsController
+    = EnrollmentsAction
+    | NewEnrollmentAction
+    | CreateEnrollmentAction
+    | ShowEnrollmentAction { enrollmentId :: !(Id Enrollment) }
+    deriving (Eq, Show, Data)
+
+-- Notas vinculadas a uma matricula
+data GradesController
+    = CreateGradeAction { enrollmentId :: !(Id Enrollment) }
+    | DeleteGradeAction { gradeId :: !(Id Grade) }
     deriving (Eq, Show, Data)

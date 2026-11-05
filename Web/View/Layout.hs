@@ -19,6 +19,7 @@ defaultLayout inner = [hsx|
                     <div class="d-flex gap-3">
                         {studentsNavigation}
                         {coursesNavigation}
+                        {enrollmentsNavigation}
                         {dashboardNavigation}
                         {authNavigation}
                     </div>
@@ -37,7 +38,7 @@ authNavigation =
     case currentUserOrNothing of
         Nothing -> [hsx|<a class="text-white" href={NewSessionAction}>Entrar</a>|]
         Just _ -> [hsx|
-            <form method="POST" action={DeleteSessionAction}>
+            <form method="POST" action={CreateLogoutAction}>
                 <button class="btn btn-sm btn-outline-light" type="submit">Sair</button>
             </form>
         |]
@@ -61,3 +62,10 @@ coursesNavigation =
 dashboardNavigation :: (?context :: Request, ?request :: Request) => Html
 dashboardNavigation =
     if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|] else mempty
+
+
+enrollmentsNavigation :: (?context :: Request, ?request :: Request) => Html
+enrollmentsNavigation =
+    if mayListStudents
+        then [hsx|<a class="text-white" href={EnrollmentsAction}>Matriculas</a>|]
+        else mempty
