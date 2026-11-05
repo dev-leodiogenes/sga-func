@@ -2,7 +2,7 @@ module Web.View.Layout where
 
 import Web.View.Prelude
 
-defaultLayout :: (?context :: Request) => Html -> Html
+defaultLayout :: (?context :: Request, ?request :: Request) => Html -> Html
 defaultLayout inner = [hsx|
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -32,7 +32,7 @@ defaultLayout inner = [hsx|
     </html>
 |]
 
-authNavigation :: (?context :: Request) => Html
+authNavigation :: (?context :: Request, ?request :: Request) => Html
 authNavigation =
     case currentUserOrNothing of
         Nothing -> [hsx|<a class="text-white" href={NewSessionAction}>Entrar</a>|]
@@ -42,22 +42,22 @@ authNavigation =
             </form>
         |]
 
-mayListStudents :: (?context :: Request) => Bool
+mayListStudents :: (?context :: Request, ?request :: Request) => Bool
 mayListStudents = case currentUserOrNothing of
     Just user -> user.role_ == "admin" || user.role_ == "professor"
     Nothing -> False
 
-maySeeDashboard :: (?context :: Request) => Bool
+maySeeDashboard :: (?context :: Request, ?request :: Request) => Bool
 maySeeDashboard = mayListStudents
 
-studentsNavigation :: (?context :: Request) => Html
+studentsNavigation :: (?context :: Request, ?request :: Request) => Html
 studentsNavigation =
     if mayListStudents then [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|] else mempty
 
-coursesNavigation :: (?context :: Request) => Html
+coursesNavigation :: (?context :: Request, ?request :: Request) => Html
 coursesNavigation =
     if isJust currentUserOrNothing then [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|] else mempty
 
-dashboardNavigation :: (?context :: Request) => Html
+dashboardNavigation :: (?context :: Request, ?request :: Request) => Html
 dashboardNavigation =
     if maySeeDashboard then [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|] else mempty
