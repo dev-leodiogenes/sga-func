@@ -32,7 +32,7 @@ defaultLayout inner = [hsx|
     </html>
 |]
 
-authNavigation :: Html
+authNavigation :: (?context :: ControllerContext) => Html
 authNavigation =
     case currentUserOrNothing of
         Nothing -> [hsx|<a class="text-white" href={NewSessionAction}>Entrar</a>|]
@@ -42,10 +42,10 @@ authNavigation =
             </form>
         |]
 
-mayListStudents :: Bool
+mayListStudents :: (?context :: ControllerContext) => Bool
 mayListStudents = case currentUserOrNothing of
     Just user -> user.role == "admin" || user.role == "professor"
     Nothing -> False
 
-maySeeDashboard :: Bool
+maySeeDashboard :: (?context :: ControllerContext) => Bool
 maySeeDashboard = mayListStudents

@@ -4,6 +4,7 @@ import IHP.Prelude
 import IHP.Environment
 import IHP.FrameworkConfig
 import IHP.LoginSupport.Middleware
+import Generated.Types (User)
 
 config :: ConfigBuilder
 config = do
