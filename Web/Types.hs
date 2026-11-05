@@ -39,3 +39,7 @@ instance HasNewSessionUrl User where
     newSessionUrl _ = "/NewSession"
 
 type instance CurrentUserRecord = User
+
+data DashboardController
+    = DashboardAction
+    deriving (Eq, Show, Data)

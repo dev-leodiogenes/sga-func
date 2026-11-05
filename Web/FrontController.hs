@@ -8,6 +8,7 @@ import Web.Routes ()
 import Web.Controller.Students ()
 import Web.Controller.Courses ()
 import Web.Controller.Sessions ()
+import Web.Controller.Dashboard ()
 import Web.View.Layout (defaultLayout)
 
 instance FrontController WebApplication where
@@ -16,6 +17,7 @@ instance FrontController WebApplication where
         , parseRoute @StudentsController
         , parseRoute @CoursesController
         , parseRoute @SessionsController
+        , parseRoute @DashboardController
         ]
 
 instance InitControllerContext WebApplication where

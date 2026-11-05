@@ -17,8 +17,9 @@ defaultLayout inner = [hsx|
                 <div class="container">
                     <a class="navbar-brand" href={StudentsAction}>SGA</a>
                     <div class="d-flex gap-3">
-                        {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|]}
+                        {when (mayListStudents) [hsx|<a class="text-white" href={StudentsAction}>Estudantes</a>|]}
                         {when (isJust currentUserOrNothing) [hsx|<a class="text-white" href={CoursesAction}>Cursos</a>|]}
+                        {when maySeeDashboard [hsx|<a class="text-white" href={DashboardAction}>Dashboard</a>|]}
                         {authNavigation}
                     </div>
                 </div>
@@ -40,3 +41,11 @@ authNavigation =
                 <button class="btn btn-sm btn-outline-light" type="submit">Sair</button>
             </form>
         |]
+
+mayListStudents :: Bool
+mayListStudents = case currentUserOrNothing of
+    Just user -> user.role == "admin" || user.role == "professor"
+    Nothing -> False
+
+maySeeDashboard :: Bool
+maySeeDashboard = mayListStudents

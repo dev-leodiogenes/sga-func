@@ -65,7 +65,7 @@ instance Controller StudentsController where
                     redirectTo ShowStudentAction { studentId = student.id }
 
     action SaveStudentNoteAction { studentId } = do
-        note <- param @Text "note"
+        let note = param @Text "note"
         savePrivateNote studentId note
         setSuccessMessage "Anotacao privada atualizada."
         redirectTo ShowStudentAction { studentId }

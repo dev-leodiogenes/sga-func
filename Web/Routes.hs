@@ -8,3 +8,4 @@ import Web.Types
 instance AutoRoute StudentsController
 instance AutoRoute CoursesController
 instance AutoRoute SessionsController
+instance AutoRoute DashboardController
