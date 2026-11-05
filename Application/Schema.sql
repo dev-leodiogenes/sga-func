@@ -66,7 +66,7 @@ CREATE TABLE users (
     failed_login_attempts INT DEFAULT 0 NOT NULL,
     role TEXT DEFAULT 'aluno' NOT NULL,
     student_id UUID DEFAULT NULL,
-    CONSTRAINT users_email_not_blank CHECK (length(trim(email)) > 0),
+    CONSTRAINT users_email_not_blank CHECK (length(replace(email, ' ', '')) > 0),
     CONSTRAINT users_role_valid CHECK (role IN ('admin', 'professor', 'aluno')),
     CONSTRAINT users_ref_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL
 );
