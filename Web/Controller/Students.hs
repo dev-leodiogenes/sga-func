@@ -64,7 +64,7 @@ instance Controller StudentsController where
                     setSuccessMessage "Estudante atualizado com sucesso."
                     redirectTo ShowStudentAction { studentId = student.id }
 
-    action SaveStudentNoteAction { studentId } = do
+    action CreateStudentNoteAction { studentId } = do
         let note = param @Text "note"
         savePrivateNote studentId note
         setSuccessMessage "Anotacao privada atualizada."

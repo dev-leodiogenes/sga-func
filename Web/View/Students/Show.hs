@@ -36,7 +36,7 @@ privateNoteForm student privateNote = [hsx|
         <div class="card-body">
             <h2 class="h5">Anotacao confidencial (AES-256)</h2>
             <p class="text-muted">Visivel apenas para administradores. Criptografada no banco.</p>
-            <form method="POST" action={SaveStudentNoteAction student.id}>
+            <form method="POST" action={CreateStudentNoteAction student.id}>
                 <textarea class="form-control mb-2" name="note" rows="3">{fromMaybe "" privateNote}</textarea>
                 <button type="submit" class="btn btn-secondary">Salvar anotacao</button>
             </form>
