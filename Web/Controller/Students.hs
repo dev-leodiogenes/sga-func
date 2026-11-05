@@ -6,6 +6,7 @@ import Web.View.Students.New
 import Web.View.Students.Show
 import Web.View.Students.Edit
 import Application.Helper.Validacoes (textoObrigatorioValido)
+import Data.Coerce (coerce)
 import Application.Helper.Permissoes
 import Application.Helper.Criptografia (savePrivateNote, readPrivateNote)
 
@@ -17,7 +18,7 @@ instance Controller StudentsController where
             StudentsAction -> accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
             ShowStudentAction { studentId } ->
                 accessDeniedUnless (case papel of
-                    Just role -> podeAcessarCadastro role (currentUser.studentId == Just studentId)
+                    Just role -> podeAcessarCadastro role (currentUser.studentId == Just (coerce studentId))
                     Nothing -> False)
             _ -> accessDeniedUnless (papel == Just Administrador)
 
