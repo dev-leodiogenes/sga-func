@@ -3,6 +3,7 @@ module Web.Types where
 import IHP.Prelude
 import IHP.ModelSupport
 import Generated.Types
+import IHP.LoginSupport.Types (HasNewSessionUrl (..), CurrentUserRecord)
 
 data WebApplication = WebApplication deriving (Eq, Show, Data)
 
@@ -26,3 +27,14 @@ data CoursesController
     | UpdateCourseAction { courseId :: !(Id Course) }
     | DeleteCourseAction { courseId :: !(Id Course) }
     deriving (Eq, Show, Data)
+
+data SessionsController
+    = NewSessionAction
+    | CreateSessionAction
+    | DeleteSessionAction
+    deriving (Eq, Show, Data)
+
+instance HasNewSessionUrl User where
+    newSessionUrl _ = "/NewSession"
+
+type instance CurrentUserRecord = User
