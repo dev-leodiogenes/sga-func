@@ -16,8 +16,27 @@ instance Controller CoursesController where
         let papel = papelDoBanco currentUser.role_
         case ?theAction of
             CoursesAction -> accessDeniedUnless (papel /= Nothing)
-            ShowCourseAction {} -> accessDeniedUnless (papel /= Nothing)
-            _ -> accessDeniedUnless (papel == Just Administrador)
+            ShowCourseAction {} ->
+                accessDeniedUnless (papel /= Nothing)
+
+            NewCourseAction ->
+                accessDeniedUnless
+                    (papel == Just Administrador || papel == Just Coordenador)
+
+            CreateCourseAction ->
+                accessDeniedUnless
+                    (papel == Just Administrador || papel == Just Coordenador)
+
+            EditCourseAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador || papel == Just Coordenador)
+
+            UpdateCourseAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador || papel == Just Coordenador)
+
+            _ ->
+                accessDeniedUnless (papel == Just Administrador)
 
     action CoursesAction = do
         allCourses <- query @Course

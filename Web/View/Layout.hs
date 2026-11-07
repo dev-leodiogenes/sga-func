@@ -21,6 +21,8 @@ defaultLayout inner = [hsx|
                         {studentsNavigation}
                         {reportCardNavigation}
                         {coursesNavigation}
+                        {academicPeriodsNavigation}
+                        {staffUsersNavigation}
                         {authNavigation}
                     </div>
                 </div>
@@ -45,7 +47,10 @@ authNavigation =
 
 mayListStudents :: (?context :: Request, ?request :: Request) => Bool
 mayListStudents = case currentUserOrNothing of
-    Just user -> user.role_ == "admin" || user.role_ == "professor"
+    Just user ->
+        user.role_ == "admin"
+        || user.role_ == "coordenador"
+        || user.role_ == "professor"
     Nothing -> False
 
 maySeeDashboard :: (?context :: Request, ?request :: Request) => Bool
@@ -90,6 +95,32 @@ reportCardNavigation =
             [hsx|
                 <a class="text-white" href={MyReportCardAction}>
                     Meu boletim
+                </a>
+            |]
+        _ -> mempty
+
+
+-- Apenas administradores visualizam o gerenciamento de periodos.
+academicPeriodsNavigation :: (?context :: Request, ?request :: Request) => Html
+academicPeriodsNavigation =
+    case currentUserOrNothing of
+        Just user | user.role_ == "admin" ->
+            [hsx|
+                <a class="text-white" href={AcademicPeriodsAction}>
+                    Períodos
+                </a>
+            |]
+        _ -> mempty
+
+
+-- Apenas administradores visualizam o gerenciamento de usuários.
+staffUsersNavigation :: (?context :: Request, ?request :: Request) => Html
+staffUsersNavigation =
+    case currentUserOrNothing of
+        Just user | user.role_ == "admin" ->
+            [hsx|
+                <a class="text-white" href={StaffUsersAction}>
+                    Usuários
                 </a>
             |]
         _ -> mempty

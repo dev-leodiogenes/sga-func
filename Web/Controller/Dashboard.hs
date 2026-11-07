@@ -16,10 +16,10 @@ instance Controller DashboardController where
     action DashboardAction = do
         let period = fromMaybe "" (paramOrNothing @Text "period")
         let courseFilter = fromMaybe "" (paramOrNothing @Text "course")
-        periods <- sqlQueryTyped [typedSql|
-            SELECT DISTINCT academic_period FROM enrollments
-            ORDER BY academic_period
-        |]
+        periodRecords <- query @AcademicPeriod
+            |> orderByAsc #code
+            |> fetch
+        let periods = map (\item -> item.code) periodRecords
         totals <- sqlQueryTyped [typedSql|
             SELECT
                 (SELECT count(*)::int4 FROM students),

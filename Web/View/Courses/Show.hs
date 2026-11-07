@@ -16,6 +16,7 @@ instance View ShowView where
         <div class="d-flex gap-2 mt-4">
             <a href={CoursesAction} class="btn btn-outline-secondary">Voltar</a>
             {assessmentsButton}
+            {when (currentUser.role_ == "admin" || currentUser.role_ == "coordenador") (editCourseAction course)}
             {when (currentUser.role_ == "admin") (adminCourseActions course)}
 
         </div>
@@ -24,7 +25,6 @@ instance View ShowView where
 
 adminCourseActions :: Course -> Html
 adminCourseActions course = [hsx|
-    <a href={EditCourseAction course.id} class="btn btn-primary">Editar</a>
     <form method="POST" action={DeleteCourseAction course.id}>
         <input type="hidden" name="_method" value="DELETE" />
         <button type="submit" class="btn btn-outline-danger">Excluir disciplina</button>
@@ -34,10 +34,17 @@ adminCourseActions course = [hsx|
 
 assessmentsButton :: Html
 assessmentsButton =
-    if currentUser.role_ == "admin" || currentUser.role_ == "professor"
+    if currentUser.role_ == "admin" || currentUser.role_ == "coordenador" || currentUser.role_ == "professor"
         then [hsx|
             <a href={AssessmentsAction} class="btn btn-outline-primary">
                 Avaliacoes
             </a>
         |]
         else mempty
+
+
+editCourseAction :: Course -> Html
+editCourseAction course = [hsx|
+    <a href={EditCourseAction course.id}
+       class="btn btn-primary">Editar</a>
+|]

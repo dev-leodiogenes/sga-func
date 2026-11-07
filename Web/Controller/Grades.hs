@@ -10,8 +10,17 @@ instance Controller GradesController where
         ensureIsUser
         requirePasswordChange
         let papel = papelDoBanco currentUser.role_
-        accessDeniedUnless
-            (papel == Just Administrador || papel == Just Professor)
+        case ?theAction of
+            CreateGradeAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador
+                     || papel == Just Professor)
+
+            DeleteGradeAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Professor)
 
     action CreateGradeAction { enrollmentId } = do
         enrollment <- fetch enrollmentId

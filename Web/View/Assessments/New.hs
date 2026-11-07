@@ -6,6 +6,7 @@ import Web.View.Enrollments.New ()
 data NewView = NewView
     { assessment :: Assessment
     , courses :: [Course]
+    , periods :: [AcademicPeriod]
     }
 
 instance View NewView where
@@ -17,7 +18,7 @@ instance View NewView where
             de uma disciplina e periodo.
         </p>
 
-        {renderContent assessment courses}
+        {renderContent assessment courses periods}
 
         <a href={AssessmentsAction}
            class="btn btn-outline-secondary mt-3">
@@ -25,9 +26,9 @@ instance View NewView where
         </a>
     |]
 
-renderContent :: Assessment -> [Course] -> Html
-renderContent assessment courses =
-    if null courses
+renderContent :: Assessment -> [Course] -> [AcademicPeriod] -> Html
+renderContent assessment courses periods =
+    if null courses || null periods
         then [hsx|
             <div class="alert alert-warning">
                 Cadastre uma disciplina antes de criar avaliacoes.
@@ -40,9 +41,13 @@ renderContent assessment courses =
             </div>
 
             <div class="mb-3">
-                {(textField #academicPeriod)
-                    { fieldLabel = "Periodo academico"
-                    , placeholder = "Ex.: 2026.2" }}
+                <label class="form-label" for="academicPeriod">
+                    Período acadêmico
+                </label>
+                <select id="academicPeriod" name="academicPeriod"
+                        class="form-select" required>
+                    {forEach periods renderPeriodOption}
+                </select>
             </div>
 
             <div class="mb-3">
@@ -53,3 +58,11 @@ renderContent assessment courses =
 
             {submitButton { label = "Criar avaliacao" }}
         |]
+
+
+renderPeriodOption :: AcademicPeriod -> Html
+renderPeriodOption period = [hsx|
+    <option value={period.code} selected={period.isActive}>
+        {period.code}
+    </option>
+|]

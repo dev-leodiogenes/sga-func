@@ -18,3 +18,10 @@ instance AutoRoute GradesController
 
 -- Rotas de avaliacoes compartilhadas
 instance AutoRoute AssessmentsController
+
+
+-- Rotas dos periodos academicos
+instance AutoRoute AcademicPeriodsController
+
+-- Rotas de gerenciamento de professores e coordenadores
+instance AutoRoute StaffUsersController

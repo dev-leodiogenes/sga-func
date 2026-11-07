@@ -62,6 +62,7 @@ CREATE INDEX grades_enrollment_id_index ON grades (enrollment_id);
 CREATE TABLE users (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
     email TEXT NOT NULL,
+    name TEXT DEFAULT NULL,
     password_hash TEXT NOT NULL,
     locked_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     failed_login_attempts INT DEFAULT 0 NOT NULL,
@@ -69,10 +70,29 @@ CREATE TABLE users (
     must_change_password BOOLEAN DEFAULT FALSE NOT NULL,
     student_id UUID DEFAULT NULL,
     CONSTRAINT users_email_not_blank CHECK (length(replace(email, ' ', '')) > 0),
-    CONSTRAINT users_role_valid CHECK (role IN ('admin', 'professor', 'aluno')),
+    CONSTRAINT users_role_valid CHECK (role IN ('admin', 'coordenador', 'professor', 'aluno')),
     CONSTRAINT users_ref_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL
 );
 CREATE UNIQUE INDEX users_email_case_insensitive_unique ON users (lower(email));
+
+-- Disciplinas vinculadas aos professores
+CREATE TABLE professor_courses (
+    professor_id UUID NOT NULL,
+    course_id UUID NOT NULL,
+
+    PRIMARY KEY (professor_id, course_id),
+
+    CONSTRAINT professor_courses_ref_professor
+        FOREIGN KEY (professor_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT professor_courses_ref_course
+        FOREIGN KEY (course_id)
+        REFERENCES courses(id)
+        ON DELETE CASCADE
+);
+
 
 -- Avaliacoes compartilhadas por disciplina e periodo
 CREATE TABLE assessments (
@@ -102,3 +122,30 @@ ALTER TABLE grades ADD CONSTRAINT grades_ref_assessment_id
 
 CREATE UNIQUE INDEX grades_enrollment_assessment_unique
     ON grades (enrollment_id, assessment_id);
+
+
+-- Gerenciamento de periodos academicos
+CREATE TABLE academic_periods (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY NOT NULL,
+    code TEXT NOT NULL UNIQUE,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Apenas um periodo pode estar ativo
+CREATE UNIQUE INDEX academic_periods_one_active
+    ON academic_periods (is_active)
+    WHERE is_active;
+
+-- Vincula matriculas aos periodos cadastrados
+ALTER TABLE enrollments
+    ADD CONSTRAINT enrollments_academic_period_fk
+    FOREIGN KEY (academic_period)
+    REFERENCES academic_periods(code)
+    ON DELETE RESTRICT;
+
+-- Vincula avaliacoes aos periodos cadastrados
+ALTER TABLE assessments
+    ADD CONSTRAINT assessments_academic_period_fk
+    FOREIGN KEY (academic_period)
+    REFERENCES academic_periods(code)
+    ON DELETE RESTRICT;

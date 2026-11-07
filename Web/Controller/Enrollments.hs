@@ -4,6 +4,7 @@ import Web.Controller.Prelude
 import Web.View.Enrollments.Index
 import Web.View.Enrollments.New
 import Web.View.Enrollments.Show
+import Web.View.Enrollments.Edit
 import Application.Helper.Permissoes
 import Application.Helper.Validacoes (textoObrigatorioValido)
 
@@ -14,11 +15,43 @@ instance Controller EnrollmentsController where
         let papel = papelDoBanco currentUser.role_
         case ?theAction of
             StudentEnrollmentsAction {} ->
-                accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador
+                     || papel == Just Professor)
+
             EnrollmentsAction ->
-                accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador
+                     || papel == Just Professor)
+
             ShowEnrollmentAction {} ->
-                accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador
+                     || papel == Just Professor)
+
+            NewEnrollmentAction ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador)
+
+            CreateEnrollmentAction ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador)
+
+            EditEnrollmentAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador)
+
+            UpdateEnrollmentAction {} ->
+                accessDeniedUnless
+                    (papel == Just Administrador
+                     || papel == Just Coordenador)
+
             _ ->
                 accessDeniedUnless (papel == Just Administrador)
 
@@ -44,14 +77,20 @@ instance Controller EnrollmentsController where
         let enrollment = newRecord @Enrollment
         students <- query @Student |> orderByAsc #name |> fetch
         courses <- query @Course |> orderByAsc #name |> fetch
+        periods <- query @AcademicPeriod |> orderByAsc #code |> fetch
         render NewView { .. }
 
     action CreateEnrollmentAction = do
         let enrollment = newRecord @Enrollment
+        periods <- query @AcademicPeriod |> orderByAsc #code |> fetch
 
         enrollment
             |> fill @'["studentId", "courseId", "academicPeriod"]
             |> validateField #academicPeriod nonBlank
+            |> validateField #academicPeriod (\valor ->
+                if any (\period -> period.code == valor) periods
+                    then Success
+                    else Failure "Selecione um período acadêmico válido.")
             |> ifValid \case
                 Left enrollment -> do
                     students <- query @Student |> orderByAsc #name |> fetch
@@ -94,6 +133,66 @@ instance Controller EnrollmentsController where
                 |> set #enrollmentId enrollment.id
 
         render ShowView { .. }
+
+    action EditEnrollmentAction { enrollmentId } = do
+        enrollment <- fetch enrollmentId
+
+        hasGrades <- query @Grade
+            |> filterWhere (#enrollmentId, enrollmentId)
+            |> fetchExists
+
+        if hasGrades
+            then do
+                setErrorMessage "Não é possível alterar o período de uma matrícula com notas."
+                redirectTo ShowEnrollmentAction { enrollmentId }
+            else do
+                student <- fetch enrollment.studentId
+                course <- fetch enrollment.courseId
+                periods <- query @AcademicPeriod
+                    |> orderByAsc #code
+                    |> fetch
+
+                render EditView { .. }
+
+    action UpdateEnrollmentAction { enrollmentId } = do
+        enrollment <- fetch enrollmentId
+        let novoPeriodo = param @Text "academicPeriod"
+
+        periods <- query @AcademicPeriod |> fetch
+
+        hasGrades <- query @Grade
+            |> filterWhere (#enrollmentId, enrollmentId)
+            |> fetchExists
+
+        duplicate <- query @Enrollment
+            |> filterWhere (#studentId, enrollment.studentId)
+            |> filterWhere (#courseId, enrollment.courseId)
+            |> filterWhere (#academicPeriod, novoPeriodo)
+            |> fetchExists
+
+        if hasGrades
+            then do
+                setErrorMessage "Não é possível alterar o período de uma matrícula com notas."
+                redirectTo ShowEnrollmentAction { enrollmentId }
+
+            else if not (any (\period -> period.code == novoPeriodo) periods)
+                then do
+                    setErrorMessage "Selecione um período acadêmico válido."
+                    redirectTo EditEnrollmentAction { enrollmentId }
+
+            else if novoPeriodo /= enrollment.academicPeriod && duplicate
+                then do
+                    setErrorMessage "Este estudante já está matriculado nessa disciplina e período."
+                    redirectTo EditEnrollmentAction { enrollmentId }
+
+            else do
+                let updatedEnrollment = enrollment
+                        |> set #academicPeriod novoPeriodo
+
+                _ <- updateRecord updatedEnrollment
+
+                setSuccessMessage "Período da matrícula atualizado com sucesso."
+                redirectTo ShowEnrollmentAction { enrollmentId }
 
     action CreateEnrollmentDeletionAction { enrollmentId } = do
         enrollment <- fetch enrollmentId

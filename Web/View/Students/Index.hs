@@ -41,12 +41,12 @@ renderStudent student = [hsx|
 
 createStudentButton :: Html
 createStudentButton =
-    if currentUser.role_ == "admin"
+    if (currentUser.role_ == "admin" || currentUser.role_ == "coordenador")
         then [hsx|<a href={NewStudentAction} class="btn btn-primary">Novo estudante</a>|]
         else mempty
 
 editStudentButton :: Student -> Html
 editStudentButton student =
-    if currentUser.role_ == "admin"
+    if (currentUser.role_ == "admin" || currentUser.role_ == "coordenador")
         then [hsx|<a href={EditStudentAction student.id} class="btn btn-sm btn-outline-secondary">Editar</a>|]
         else mempty

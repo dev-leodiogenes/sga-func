@@ -25,7 +25,7 @@ instance View ShowView where
                 <p><strong>Matricula:</strong> {student.registrationNumber}</p>
                 <p><strong>Disciplina:</strong> {course.name}</p>
                 <p><strong>Periodo:</strong> {enrollment.academicPeriod}</p>
-                <p><strong>Situacao:</strong> {tshow enrollment.status}</p>
+                <p><strong>Situacao:</strong> {situacaoMatricula (tshow enrollment.status)}</p>
             </div>
         </div>
 
@@ -49,6 +49,8 @@ instance View ShowView where
         <h3 class="mt-4">Lancamento de nota</h3>
         {renderGradeForm enrollment newGrade assessments}
 
+        {when (currentUser.role_ == "admin" || currentUser.role_ == "coordenador") (editPeriodButton enrollment)}
+
         {when (currentUser.role_ == "admin") (deleteEnrollmentButton enrollment)}
 
         <a href={EnrollmentsAction}
@@ -63,12 +65,7 @@ renderGrade grade = [hsx|
         <td>{grade.assessmentName}</td>
         <td>{tshow grade.value}</td>
         <td>
-            <form method="POST" action={DeleteGradeAction grade.id}>
-                <input type="hidden" name="_method" value="DELETE" />
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                    Excluir
-                </button>
-            </form>
+            {when (currentUser.role_ == "admin" || currentUser.role_ == "professor") (deleteGradeButton grade)}
         </td>
     </tr>
 |]
@@ -140,4 +137,24 @@ deleteEnrollmentButton enrollment = [hsx|
             Excluir matricula
         </button>
     </form>
+|]
+
+
+deleteGradeButton :: Grade -> Html
+deleteGradeButton grade = [hsx|
+    <form method="POST" action={DeleteGradeAction grade.id}>
+        <input type="hidden" name="_method" value="DELETE" />
+        <button type="submit" class="btn btn-sm btn-outline-danger">
+            Excluir
+        </button>
+    </form>
+|]
+
+
+editPeriodButton :: Enrollment -> Html
+editPeriodButton enrollment = [hsx|
+    <a href={EditEnrollmentAction enrollment.id}
+       class="btn btn-outline-primary mt-3 mb-2">
+        Editar período
+    </a>
 |]

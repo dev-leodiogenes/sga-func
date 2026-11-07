@@ -5,13 +5,13 @@ import Web.View.Prelude
 renderForm :: Course -> Html
 renderForm course = formFor course [hsx|
     <div class="mb-3">
-        {textField #code}
+        {(textField #code) { fieldLabel = "Código" }}
     </div>
     <div class="mb-3">
-        {textField #name}
+        {(textField #name) { fieldLabel = "Nome da disciplina" }}
     </div>
     <div class="mb-3">
-        {numberField #workloadHours}
+        {(numberField #workloadHours) { fieldLabel = "Carga horária (h)" }}
     </div>
-    {submitButton}
+    {submitButton { label = "Salvar" }}
 |]

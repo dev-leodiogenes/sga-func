@@ -41,12 +41,12 @@ renderCourse course = [hsx|
 
 createCourseButton :: Html
 createCourseButton =
-    if currentUser.role_ == "admin"
+    if (currentUser.role_ == "admin" || currentUser.role_ == "coordenador")
         then [hsx|<a href={NewCourseAction} class="btn btn-primary">Nova disciplina</a>|]
         else mempty
 
 editCourseButton :: Course -> Html
 editCourseButton course =
-    if currentUser.role_ == "admin"
+    if (currentUser.role_ == "admin" || currentUser.role_ == "coordenador")
         then [hsx|<a href={EditCourseAction course.id} class="btn btn-sm btn-outline-secondary">Editar</a>|]
         else mempty

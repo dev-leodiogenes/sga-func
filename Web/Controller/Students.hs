@@ -24,7 +24,22 @@ instance Controller StudentsController where
             MyReportCardAction ->
                 accessDeniedUnless
                     (papel == Just Aluno && isJust currentUser.studentId)
-            StudentsAction -> accessDeniedUnless (papel == Just Administrador || papel == Just Professor)
+            StudentsAction ->
+                accessDeniedUnless
+                    (papel == Just Administrador || papel == Just Coordenador || papel == Just Professor)
+
+            NewStudentAction ->
+                accessDeniedUnless (papel == Just Administrador || papel == Just Coordenador)
+
+            CreateStudentAction ->
+                accessDeniedUnless (papel == Just Administrador || papel == Just Coordenador)
+
+            EditStudentAction {} ->
+                accessDeniedUnless (papel == Just Administrador || papel == Just Coordenador)
+
+            UpdateStudentAction {} ->
+                accessDeniedUnless (papel == Just Administrador || papel == Just Coordenador)
+
             ShowStudentAction { studentId } ->
                 accessDeniedUnless (case papel of
                     Just role -> podeAcessarCadastro role (currentUser.studentId == Just (coerce studentId))
