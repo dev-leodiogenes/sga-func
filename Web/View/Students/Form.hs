@@ -11,16 +11,16 @@ renderNewForm = renderStudentForm True
 renderStudentForm :: Bool -> Student -> Html
 renderStudentForm isNew student = formFor student [hsx|
     <div class="mb-3">
-        {textField #registrationNumber}
+        {(textField #registrationNumber) { fieldLabel = "Número de matrícula" }}
     </div>
     <div class="mb-3">
-        {textField #name}
+        {(textField #name) { fieldLabel = "Nome completo" }}
     </div>
     <div class="mb-3">
-        {textField #email}
+        {(textField #email) { fieldLabel = "E-mail" }}
     </div>
     {initialPasswordField isNew}
-    {submitButton}
+    {submitButton { label = "Salvar" }}
 |]
 
 initialPasswordField :: Bool -> Html
@@ -38,7 +38,7 @@ initialPasswordField True = [hsx|
                autocomplete="new-password"
                required />
         <div class="form-text">
-            O estudante devera alterar essa senha no primeiro acesso.
+            O estudante deverá alterar essa senha no primeiro acesso.
         </div>
     </div>
 |]

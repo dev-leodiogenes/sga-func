@@ -56,7 +56,7 @@ renderEnrollment :: [Student] -> Enrollment -> Html
 renderEnrollment students enrollment = [hsx|
     <tr>
         <td>{studentName enrollment.studentId students}</td>
-        <td>{tshow enrollment.status}</td>
+        <td>{situacaoMatricula (tshow enrollment.status)}</td>
     </tr>
 |]
 

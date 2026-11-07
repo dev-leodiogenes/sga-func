@@ -12,6 +12,8 @@ import Web.Controller.Dashboard ()
 import Web.Controller.Enrollments ()
 import Web.Controller.Grades ()
 import Web.Controller.Assessments ()
+import Web.Controller.AcademicPeriods ()
+import Web.Controller.StaffUsers ()
 import Web.View.Layout (defaultLayout)
 
 instance FrontController WebApplication where
@@ -24,6 +26,8 @@ instance FrontController WebApplication where
         , parseRoute @EnrollmentsController
         , parseRoute @GradesController
         , parseRoute @AssessmentsController
+        , parseRoute @AcademicPeriodsController
+        , parseRoute @StaffUsersController
         ]
 
 instance InitControllerContext WebApplication where

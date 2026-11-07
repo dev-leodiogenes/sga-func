@@ -55,6 +55,8 @@ data EnrollmentsController
     | CreateEnrollmentAction
     | StudentEnrollmentsAction { studentId :: !(Id Student) }
     | ShowEnrollmentAction { enrollmentId :: !(Id Enrollment) }
+    | EditEnrollmentAction { enrollmentId :: !(Id Enrollment) }
+    | UpdateEnrollmentAction { enrollmentId :: !(Id Enrollment) }
     | CreateEnrollmentDeletionAction { enrollmentId :: !(Id Enrollment) }
     deriving (Eq, Show, Data)
 
@@ -71,4 +73,20 @@ data AssessmentsController
     | CreateAssessmentAction
     | ShowAssessmentAction { assessmentId :: !(Id Assessment) }
     | CreateAssessmentGradeAction { assessmentId :: !(Id Assessment), enrollmentId :: !(Id Enrollment) }
+    deriving (Eq, Show, Data)
+
+
+-- Gerenciamento do periodo academico ativo
+data AcademicPeriodsController
+    = AcademicPeriodsAction
+    | CreateActiveAcademicPeriodAction
+        { academicPeriodId :: !(Id AcademicPeriod) }
+    deriving (Eq, Show, Data)
+
+
+-- Gerenciamento de professores e coordenadores pelo administrador
+data StaffUsersController
+    = StaffUsersAction
+    | NewStaffUserAction
+    | CreateStaffUserAction
     deriving (Eq, Show, Data)

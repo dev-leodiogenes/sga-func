@@ -13,7 +13,9 @@ instance Controller AssessmentsController where
         requirePasswordChange
         let papel = papelDoBanco currentUser.role_
         accessDeniedUnless
-            (papel == Just Administrador || papel == Just Professor)
+            (papel == Just Administrador
+             || papel == Just Coordenador
+             || papel == Just Professor)
 
     action AssessmentsAction = do
         assessments <- query @Assessment
@@ -27,14 +29,24 @@ instance Controller AssessmentsController where
         courses <- query @Course
             |> orderByAsc #name
             |> fetch
+        periods <- query @AcademicPeriod
+            |> orderByAsc #code
+            |> fetch
         render NewView { .. }
 
     action CreateAssessmentAction = do
         let assessment = newRecord @Assessment
+        periods <- query @AcademicPeriod
+            |> orderByAsc #code
+            |> fetch
 
         assessment
             |> fill @'["courseId", "academicPeriod", "name"]
             |> validateField #academicPeriod nonBlank
+            |> validateField #academicPeriod (\valor ->
+                if any (\period -> period.code == valor) periods
+                    then Success
+                    else Failure "Selecione um período válido.")
             |> validateField #name nonBlank
             |> ifValid \case
                 Left assessment -> do

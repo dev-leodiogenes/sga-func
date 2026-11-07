@@ -66,7 +66,7 @@ courseName courseId courses =
 
 createEnrollmentButton :: Html
 createEnrollmentButton =
-    if currentUser.role_ == "admin"
+    if (currentUser.role_ == "admin" || currentUser.role_ == "coordenador")
         then [hsx|
             <a href={NewEnrollmentAction} class="btn btn-primary">
                 Nova matricula
