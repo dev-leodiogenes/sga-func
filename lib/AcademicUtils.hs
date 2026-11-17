@@ -1,5 +1,7 @@
 module AcademicUtils where
 
+import Prelude
+
 -- Representa uma nota de forma temporária para desenvolver
 data InformacaoNota = InformacaoNota
     { nomeAvaliacao :: String

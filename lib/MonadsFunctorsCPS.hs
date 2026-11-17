@@ -1,5 +1,6 @@
 module MonadsFunctorsCPS where
 
+import Prelude
 import Control.Monad.Reader (Reader, ask, runReader)
 
 -- ============================================================

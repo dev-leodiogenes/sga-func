@@ -173,3 +173,43 @@ https://github.com/dev-leodiogenes/sga-func
 ## Finalidade
 
 Projeto desenvolvido para fins acadêmicos, demonstrando a aplicação de conceitos de programação funcional em um sistema web com persistência de dados, autenticação, validações, controle de acesso e testes.
+
+## Demonstrações complementares de programação funcional
+
+O projeto possui módulos didáticos executáveis:
+
+- `lib/AcademicUtils.hs`: list comprehension, pattern matching, map, filter, foldl, concatMap e Maybe.
+- `lib/MonadsFunctorsCPS.hs`: Maybe, Either, IO, Reader, fmap, CPS, currying e lazy evaluation.
+
+Exemplo de execução:
+
+```bash
+ghci -v0 lib/AcademicUtils.hs -e 'print (notasAprovadas [InformacaoNota "AV1" 8, InformacaoNota "AV2" 5], mediaNotas [InformacaoNota "AV1" 8, InformacaoNota "AV2" 6])'
+```
+
+Resultado verificado:
+
+```text
+([InformacaoNota {nomeAvaliacao = "AV1", valorNota = 8.0}],Just 7.0)
+```
+
+## Demonstração complementar com MongoDB
+
+O PostgreSQL continua sendo o banco principal do SGA-Func.
+
+O arquivo `examples/mongodb-courses.js` demonstra operações CRUD em MongoDB, utilizando um banco separado chamado `sga_func_demo`.
+
+Para executar com MongoDB Server e mongosh disponíveis:
+
+```bash
+mongosh --quiet examples/mongodb-courses.js
+```
+
+A demonstração foi executada com sucesso, incluindo:
+
+- CREATE: cadastro de disciplina.
+- READ: consulta da disciplina.
+- UPDATE: alteração da carga horária de 60 para 80.
+- DELETE: exclusão do registro temporário.
+
+O exemplo é independente da aplicação IHP e não representa uma integração operacional do SGA-Func com MongoDB.
