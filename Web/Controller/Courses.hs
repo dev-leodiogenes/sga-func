@@ -55,7 +55,17 @@ instance Controller CoursesController where
                             (\enrollment -> enrollment.courseId == course.id)
                             enrollments)
                         allCourses)
-            else pure allCourses
+            else if currentUser.role_ == "professor"
+                then do
+                    vinculos <- query @ProfessorCourse
+                        |> filterWhere (#professorId, coerce currentUser.id)
+                        |> fetch
+                    pure (filter
+                        (\course -> any
+                            (\vinculo -> vinculo.courseId == coerce course.id)
+                            vinculos)
+                        allCourses)
+                else pure allCourses
 
         render IndexView { .. }
 
@@ -73,6 +83,13 @@ instance Controller CoursesController where
                         |> filterWhere (#courseId, courseId)
                         |> fetchExists
                     accessDeniedUnless enrolled
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
 
         course <- fetch courseId
         render ShowView { .. }

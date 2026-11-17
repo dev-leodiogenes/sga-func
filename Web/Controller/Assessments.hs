@@ -1,6 +1,7 @@
 module Web.Controller.Assessments where
 
 import Web.Controller.Prelude
+import Data.Coerce (coerce)
 import Web.View.Assessments.Index
 import Web.View.Assessments.New
 import Web.View.Assessments.Show
@@ -18,17 +19,52 @@ instance Controller AssessmentsController where
              || papel == Just Professor)
 
     action AssessmentsAction = do
-        assessments <- query @Assessment
+        allAssessments <- query @Assessment
             |> orderByAsc #name
             |> fetch
-        courses <- query @Course |> fetch
+        allCourses <- query @Course |> fetch
+
+        vinculos <- if currentUser.role_ == "professor"
+            then query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> fetch
+            else pure []
+
+        let assessments =
+                if currentUser.role_ == "professor"
+                    then filter (\assessment -> any
+                        (\vinculo -> vinculo.courseId == coerce assessment.courseId)
+                        vinculos) allAssessments
+                    else allAssessments
+
+        let courses =
+                if currentUser.role_ == "professor"
+                    then filter (\course -> any
+                        (\vinculo -> vinculo.courseId == coerce course.id)
+                        vinculos) allCourses
+                    else allCourses
+
         render IndexView { .. }
 
     action NewAssessmentAction = do
         let assessment = newRecord @Assessment
-        courses <- query @Course
+        allCourses <- query @Course
             |> orderByAsc #name
             |> fetch
+
+        vinculos <- if currentUser.role_ == "professor"
+            then query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> fetch
+            else pure []
+
+        let courses =
+                if currentUser.role_ == "professor"
+                    then filter (\course -> any
+                        (\vinculo -> vinculo.courseId == coerce course.id)
+                        vinculos) allCourses
+                    else allCourses
+
         periods <- query @AcademicPeriod
             |> orderByAsc #code
             |> fetch
@@ -40,8 +76,17 @@ instance Controller AssessmentsController where
             |> orderByAsc #code
             |> fetch
 
-        assessment
-            |> fill @'["courseId", "academicPeriod", "name"]
+        let submitted = assessment
+                |> fill @'["courseId", "academicPeriod", "name"]
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce submitted.courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
+
+        submitted
             |> validateField #academicPeriod nonBlank
             |> validateField #academicPeriod (\valor ->
                 if any (\period -> period.code == valor) periods
@@ -50,7 +95,21 @@ instance Controller AssessmentsController where
             |> validateField #name nonBlank
             |> ifValid \case
                 Left assessment -> do
-                    courses <- query @Course |> fetch
+                    allCourses <- query @Course |> fetch
+
+                    vinculos <- if currentUser.role_ == "professor"
+                        then query @ProfessorCourse
+                            |> filterWhere (#professorId, coerce currentUser.id)
+                            |> fetch
+                        else pure []
+
+                    let courses =
+                            if currentUser.role_ == "professor"
+                                then filter (\course -> any
+                                    (\vinculo -> vinculo.courseId == coerce course.id)
+                                    vinculos) allCourses
+                                else allCourses
+
                     render NewView { .. }
 
                 Right assessment -> do
@@ -74,6 +133,14 @@ instance Controller AssessmentsController where
 
     action ShowAssessmentAction { assessmentId } = do
         assessment <- fetch assessmentId
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce assessment.courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
+
         course <- fetch assessment.courseId
 
         enrollments <- query @Enrollment
@@ -87,6 +154,14 @@ instance Controller AssessmentsController where
 
     action CreateAssessmentGradeAction { assessmentId, enrollmentId } = do
         assessment <- fetch assessmentId
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce assessment.courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
+
         enrollment <- fetch enrollmentId
 
         -- Impede lancar nota em uma disciplina ou periodo diferente.

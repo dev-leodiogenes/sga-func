@@ -1,6 +1,7 @@
 module Web.Controller.Grades where
 
 import Web.Controller.Prelude
+import Data.Coerce (coerce)
 import Control.Monad.Reader (Reader, ask, runReader)
 import Application.Helper.Permissoes
 import Application.Helper.Validacoes (textoObrigatorioValido)
@@ -24,6 +25,13 @@ instance Controller GradesController where
 
     action CreateGradeAction { enrollmentId } = do
         enrollment <- fetch enrollmentId
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce enrollment.courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
 
         let grade = newRecord @Grade
                 |> set #enrollmentId enrollment.id
@@ -68,12 +76,29 @@ instance Controller GradesController where
                                 redirectTo ShowEnrollmentAction { enrollmentId }
 
     action DeleteGradeAction { gradeId } = do
-        grade <- fetch gradeId
-        let enrollmentId = grade.enrollmentId
+        maybeGrade <- query @Grade
+            |> filterWhere (#id, gradeId)
+            |> fetchOneOrNothing
 
-        deleteRecord grade
-        setSuccessMessage "Nota excluida com sucesso."
-        redirectTo ShowEnrollmentAction { enrollmentId }
+        case maybeGrade of
+            Nothing -> do
+                setErrorMessage "Nota nao encontrada."
+                redirectTo EnrollmentsAction
+
+            Just grade -> do
+                let enrollmentId = grade.enrollmentId
+                enrollment <- fetch enrollmentId
+
+                when (currentUser.role_ == "professor") do
+                    vinculado <- query @ProfessorCourse
+                        |> filterWhere (#professorId, coerce currentUser.id)
+                        |> filterWhere (#courseId, coerce enrollment.courseId)
+                        |> fetchExists
+                    accessDeniedUnless vinculado
+
+                deleteRecord grade
+                setSuccessMessage "Nota excluida com sucesso."
+                redirectTo ShowEnrollmentAction { enrollmentId }
 
 nonBlank :: Text -> ValidatorResult
 nonBlank value
