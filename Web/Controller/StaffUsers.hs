@@ -7,6 +7,13 @@ import Application.Helper.Permissoes
 import IHP.AuthSupport.Authentication (hashPassword)
 import IHP.TypedSql (typedSql, sqlQueryTyped, sqlExecTyped)
 import qualified Data.Text as T
+import Application.Helper.CadastroProfissional
+    ( ErroCadastro (EmailJaCadastrado)
+    , validarCadastroProfissional
+    , mensagemErroCadastro
+    )
+import Control.Monad.Except (runExceptT, throwError)
+import Control.Monad.IO.Class (liftIO)
 
 instance Controller StaffUsersController where
     beforeAction = do
@@ -44,53 +51,28 @@ instance Controller StaffUsersController where
                 (\course -> course.id `elem` courseIds)
                 courses
 
-        existingUsers <- sqlQueryTyped [typedSql|
-            SELECT id FROM users
-            WHERE lower(email) = lower(${email})
-            LIMIT 1
-        |]
+        resultado <- runExceptT $ do
+            either throwError pure $
+                validarCadastroProfissional
+                    name email role initialPassword
+                    (length courseIds)
+                    (length selectedCourses)
 
-        if T.null name
-            then do
-                setErrorMessage "Informe o nome do profissional."
+            existingUsers <- liftIO $ sqlQueryTyped [typedSql|
+                SELECT id FROM users
+                WHERE lower(email) = lower(${email})
+                LIMIT 1
+            |]
+
+            when (not (null existingUsers)) $
+                throwError EmailJaCadastrado
+
+        case resultado of
+            Left erro -> do
+                setErrorMessage (mensagemErroCadastro erro)
                 render NewView { .. }
 
-            else if not (emailValido email)
-                then do
-                    setErrorMessage "Informe um e-mail válido."
-                    render NewView { .. }
-
-            else if role /= "professor" && role /= "coordenador"
-                then do
-                    setErrorMessage "Selecione um perfil válido."
-                    render NewView { .. }
-
-            else if length courseIds /= length selectedCourses
-                then do
-                    setErrorMessage "Selecione apenas disciplinas válidas, sem duplicações."
-                    render NewView { .. }
-
-            else if role == "professor" && null selectedCourses
-                then do
-                    setErrorMessage "Selecione pelo menos uma disciplina para o professor."
-                    render NewView { .. }
-
-            else if role == "coordenador" && not (null selectedCourses)
-                then do
-                    setErrorMessage "O vínculo de disciplinas é exclusivo de professores."
-                    render NewView { .. }
-
-            else if T.length (T.strip initialPassword) < 8
-                then do
-                    setErrorMessage "A senha deve ter pelo menos 8 caracteres."
-                    render NewView { .. }
-
-            else if not (null existingUsers)
-                then do
-                    setErrorMessage "Já existe uma conta com este e-mail."
-                    render NewView { .. }
-
-            else do
+            Right () -> do
                 passwordHash <- hashPassword initialPassword
 
                 let newUser = newRecord @User
@@ -122,13 +104,3 @@ instance Controller StaffUsersController where
 
                 setSuccessMessage "Profissional cadastrado com sucesso."
                 redirectTo StaffUsersAction
-
-
-emailValido :: Text -> Bool
-emailValido email =
-    case T.splitOn "@" email of
-        [local, dominio] ->
-            not (T.null local)
-            && not (T.null dominio)
-            && not (T.any (== ' ') email)
-        _ -> False

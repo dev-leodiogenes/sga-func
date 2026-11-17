@@ -1,6 +1,7 @@
 module Web.Controller.Enrollments where
 
 import Web.Controller.Prelude
+import Data.Coerce (coerce)
 import Web.View.Enrollments.Index
 import Web.View.Enrollments.New
 import Web.View.Enrollments.Show
@@ -57,20 +58,79 @@ instance Controller EnrollmentsController where
 
     action EnrollmentsAction = do
         let selectedStudent = Nothing
-        enrollments <- query @Enrollment |> orderByDesc #academicPeriod |> fetch
-        students <- query @Student |> fetch
-        courses <- query @Course |> fetch
+        allEnrollments <- query @Enrollment |> orderByDesc #academicPeriod |> fetch
+        allStudents <- query @Student |> fetch
+        allCourses <- query @Course |> fetch
+
+        vinculos <- if currentUser.role_ == "professor"
+            then query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> fetch
+            else pure []
+
+        let enrollments =
+                if currentUser.role_ == "professor"
+                    then filter (\enrollment -> any
+                        (\vinculo -> vinculo.courseId == coerce enrollment.courseId)
+                        vinculos) allEnrollments
+                    else allEnrollments
+
+        let students =
+                if currentUser.role_ == "professor"
+                    then filter (\student -> any
+                        (\enrollment -> enrollment.studentId == student.id)
+                        enrollments) allStudents
+                    else allStudents
+
+        let courses =
+                if currentUser.role_ == "professor"
+                    then filter (\course -> any
+                        (\vinculo -> vinculo.courseId == coerce course.id)
+                        vinculos) allCourses
+                    else allCourses
+
         render IndexView { .. }
 
     action StudentEnrollmentsAction { studentId } = do
         student <- fetch studentId
         let selectedStudent = Just student
-        enrollments <- query @Enrollment
+
+        allEnrollments <- query @Enrollment
             |> filterWhere (#studentId, studentId)
             |> orderByDesc #academicPeriod
             |> fetch
-        students <- query @Student |> fetch
-        courses <- query @Course |> fetch
+
+        vinculos <- if currentUser.role_ == "professor"
+            then query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> fetch
+            else pure []
+
+        let enrollments =
+                if currentUser.role_ == "professor"
+                    then filter (\enrollment -> any
+                        (\vinculo -> vinculo.courseId == coerce enrollment.courseId)
+                        vinculos) allEnrollments
+                    else allEnrollments
+
+        when (currentUser.role_ == "professor") do
+            accessDeniedUnless (not (null enrollments))
+
+        allStudents <- query @Student |> fetch
+        allCourses <- query @Course |> fetch
+
+        let students =
+                if currentUser.role_ == "professor"
+                    then [student]
+                    else allStudents
+
+        let courses =
+                if currentUser.role_ == "professor"
+                    then filter (\course -> any
+                        (\enrollment -> enrollment.courseId == course.id)
+                        enrollments) allCourses
+                    else allCourses
+
         render IndexView { .. }
 
     action NewEnrollmentAction = do
@@ -115,6 +175,14 @@ instance Controller EnrollmentsController where
 
     action ShowEnrollmentAction { enrollmentId } = do
         enrollment <- fetch enrollmentId
+
+        when (currentUser.role_ == "professor") do
+            vinculado <- query @ProfessorCourse
+                |> filterWhere (#professorId, coerce currentUser.id)
+                |> filterWhere (#courseId, coerce enrollment.courseId)
+                |> fetchExists
+            accessDeniedUnless vinculado
+
         student <- fetch enrollment.studentId
         course <- fetch enrollment.courseId
 
